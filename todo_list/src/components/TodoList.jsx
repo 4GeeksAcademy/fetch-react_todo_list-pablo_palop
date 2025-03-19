@@ -4,94 +4,102 @@ import { todoListService } from "../services/todoListService";
 const TodoList = () => {
     const [tasks, setTasks] = useState([]);
     const [newTask, setNewTask] = useState("");
-    const [hover, setHover] = useState(null);
     const [userInput, setUserInput] = useState("");
+    const [formSubmitted, setFormSubmitted] = useState(false);
+    const [editingTask, setEditingTask] = useState(null);
+    const [editedTaskLabel, setEditedTaskLabel] = useState("");
 
-    const inputChange = (e) => {
-        setNewTask(e.target.value);
-    };
+    useEffect(() => {
+        if(formSubmitted){
+            fetchTasks();
+        }
+    }, [formSubmitted])
 
-    const enterKeyDown = (e) => {
-        if (e.key === "Enter" && newTask.trim() !== "") {
-            setTasks([...tasks, newTask]);
-            setNewTask("");
+    const fetchTasks = async () => {
+        try{
+            const data = await todoListService.getTasks(userInput);
+            setTasks(data);
+        }catch(error){
+            console.error(error);
+        }
+    }
+
+    const handleDeleteTask = async (taskId) => {
+        try {
+            await todoListService.deleteTask(userInput, taskId);
+            setTasks(tasks.filter(task => task.id !== taskId)); // Actualización selectiva
+        } catch (error) {
+            console.error(error);
         }
     };
 
-    const deleteTask = (index) => {
-        setTasks(tasks.filter((_, i) => i !== index));
-    };
-
-
-    const handleOnSubmit = async (e) => {
-        e.preventDefault()
+    const handleCreateTask = async () => {
         try {
-            await todoListService.createUser(userInput)
+            const createdTask = await todoListService.createTask(userInput, newTask);
+            setTasks([...tasks, newTask]);
+            setNewTask("");
         } catch (error) {
             console.log(error);
         }
-    }
+    };
+
+
+    const handleCreateUser = async () => {
+        try {
+            await todoListService.createUser(userInput);
+            setFormSubmitted(true);
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
     return (
         <div>
             <div className="d-flex justify-content-center text-primary">
-                <form onSubmit={handleOnSubmit}>
-                    <h4>User Name</h4>
+                <form>
+                    <label htmlFor="userName" className="form-label">Ingresa el nombre del usuario: </label>
                     <input
-                        className=""
+                        id="userName"
                         type="text"
                         value={userInput}
-                        onChange={(e) => {
-                            setUserInput(prevUserInput => {
-                                return { ...prevUserInput, "name": e.target.value }
-                            })
-                        }}
+                        onChange={(e) => setUserInput(e.target.value)}
+                        placeholder="Nombre de usuario"
                     />
-                    <button type="submit">Submit</button>
+                    <button type="button" onClick={handleCreateUser}>Submit</button>
                 </form>
             </div>
-            <div className="d-flex justify-content-center text-primary">
-                <h1>To Do</h1>
+            <div>
+                <input
+                    type="text"
+                    placeholder="Nueva tarea"
+                    value={newTask}
+                    onChange={(e) => setNewTask(e.target.value)}
+                />
+                <button onClick={handleCreateTask}>Agregar Tarea</button>
             </div>
-            <div className="card border-0">
-                <div className="card-body">
-
-                    <input
-                        className="border-0"
-                        type="text"
-                        name="item"
-                        id="todoItem"
-                        value={newTask}
-                        placeholder="Añadir tarea"
-                        onChange={inputChange}
-                        onKeyDown={enterKeyDown}
-                    />
-
-                    <ul className="list-group mt-3 border-bottom">
-                        {tasks.length === 0 ? (
-                            <li className="list-group-item text-muted">No hay tareas, añadir tareas</li>
-                        ) : (
-                            tasks.map((task, index) => (
-                                <li key={index}
-                                    className="list-group-item d-flex justify-content-between align-items-center border-bottom"
-                                    onMouseEnter={() => setHover(index)}
-                                    onMouseLeave={() => setHover(null)}
-                                >
-                                    {task}
-                                    {hover === index && (
-                                        <button
-                                            className="btn btn-danger btn-sm"
-                                            onClick={() => deleteTask(index)}
-                                        >
-                                            ❌
-                                        </button>
-                                    )}
-                                </li>
-                            ))
-                        )}
-                    </ul>
-                </div>
-            </div>
+            <ul>
+            {tasks.map((task, index) => (
+                            <li key={index}>
+                                {editingTask === task.id ? (
+                                    <>
+                                        <input
+                                            type="text"
+                                            value={editedTaskLabel}
+                                            onChange={(e) => setEditedTaskLabel(e.target.value)}
+                                        />
+                                        <button onClick={() => handleUpdateTask(task.id)}>Guardar</button>
+                                        <button onClick={() => setEditingTask(null)}>Cancelar</button>
+                                    </>
+                                ) : (
+                                    <>
+                                        {task.label}
+                                        <button onClick={() => handleEditTask(task)}>Editar</button>
+                                        <button onClick={() => handleDeleteTask(task.id)}>Eliminar</button>
+                                    </>
+                                )}
+                            </li>
+                        ))}
+            </ul>
         </div>
     );
 };
