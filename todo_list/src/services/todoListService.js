@@ -18,6 +18,7 @@ export const todoListService = {
 
         } catch (error) {
             console.log(error);
+            throw error;
         }
     },
 
@@ -94,6 +95,20 @@ export const todoListService = {
         }
     },
 
+    updateAllTasks: async (userName, tasks) => {
+        const response = await fetch(`${baseUrlTodos}${userName}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "accept": "application/json",
+            },
+            body: JSON.stringify(tasks),
+        });
+    
+        if (!response.ok) throw new Error("Error actualizando tareas");
+        return await response.json();
+    },
+    
     deleteTask: async (userName, taskId) => {
         try {
             const request = await fetch(`${baseUrlTodos}${taskId}`, {
@@ -105,6 +120,23 @@ export const todoListService = {
             });
 
             if (!request.ok) throw new Error("Error eliminando la tarea");
+            return true;
+        } catch (error) {
+            console.log(error);
+        }
+    },
+
+    clearAllTasks: async (userName) => {
+        try {
+            const request = await fetch(`${baseUrlTodos}${userName}`, {
+                method: "DELETE",
+                headers: {
+                    'accept': 'application/json',
+                    "Content-Type": "application/json"
+                },
+            });
+
+            if (!request.ok) throw new Error("Error eliminando todas las tareas");
             return true;
         } catch (error) {
             console.log(error);

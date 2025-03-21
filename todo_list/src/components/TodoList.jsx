@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { todoListService } from "../services/todoListService";
 
 const TodoList = () => {
@@ -6,8 +6,6 @@ const TodoList = () => {
     const [newTask, setNewTask] = useState("");
     const [userInput, setUserInput] = useState("");
     const [formSubmitted, setFormSubmitted] = useState(false);
-    const [editingTask, setEditingTask] = useState(null);
-    const [editedTaskLabel, setEditedTaskLabel] = useState("");
 
     useEffect(() => {
         if(formSubmitted){
@@ -50,6 +48,16 @@ const TodoList = () => {
             setFormSubmitted(true);
         } catch (error) {
             console.log(error);
+            setFormSubmitted(true);
+        }
+    };
+
+    const handleClearAll = async () => {
+        try {
+            await todoListService.clearAllTasks(userInput);
+            setTasks([]);
+        } catch (error) {
+            console.error(error);
         }
     };
 
@@ -68,38 +76,29 @@ const TodoList = () => {
                     <button type="button" onClick={handleCreateUser}>Submit</button>
                 </form>
             </div>
-            <div>
-                <input
-                    type="text"
-                    placeholder="Nueva tarea"
-                    value={newTask}
-                    onChange={(e) => setNewTask(e.target.value)}
-                />
-                <button onClick={handleCreateTask}>Agregar Tarea</button>
-            </div>
-            <ul>
-            {tasks.map((task, index) => (
+            {formSubmitted && (
+                <>
+                    <div>
+                        <input
+                            type="text"
+                            placeholder="Nueva tarea"
+                            value={newTask}
+                            onChange={(e) => setNewTask(e.target.value)}
+                        />
+                        <button onClick={handleCreateTask}>Agregar Tarea</button>
+                        <button onClick={handleClearAll}>Limpiar todas las tareas</button>
+                    </div>
+                    <ul>
+                        {tasks.map((task, index) => (
                             <li key={index}>
-                                {editingTask === task.id ? (
-                                    <>
-                                        <input
-                                            type="text"
-                                            value={editedTaskLabel}
-                                            onChange={(e) => setEditedTaskLabel(e.target.value)}
-                                        />
-                                        <button onClick={() => handleUpdateTask(task.id)}>Guardar</button>
-                                        <button onClick={() => setEditingTask(null)}>Cancelar</button>
-                                    </>
-                                ) : (
-                                    <>
-                                        {task.label}
-                                        <button onClick={() => handleEditTask(task)}>Editar</button>
-                                        <button onClick={() => handleDeleteTask(task.id)}>Eliminar</button>
-                                    </>
-                                )}
+                                {task.label}
+                                <button onClick={() => handleDeleteTask(task.id)}>Eliminar</button>
                             </li>
                         ))}
-            </ul>
+                    </ul>
+                    <button onClick={handleClearAll}>Limpiar todas las tareas</button>
+                </>
+            )}
         </div>
     );
 };
