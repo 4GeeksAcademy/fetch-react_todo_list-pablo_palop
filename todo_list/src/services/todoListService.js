@@ -66,10 +66,15 @@ export const todoListService = {
 
     getTasks: async (userName) => {
         try {
-            const response = await fetch(`${baseUrlTodos}${userName}`);
+            const response = await fetch(`${baseUrlUsers}${userName}`, {
+                headers: {
+                    'accept': 'application/json',
+                    "Content-Type": "application/json"
+                }
+            })
             if (!response.ok) throw new Error("Error obteniendo las tareas");
             const data = await response.json();
-            return data;
+            return data.todos;
         } catch (error) {
             console.error(error);
             throw error;
@@ -94,22 +99,8 @@ export const todoListService = {
             console.log(error);
         }
     },
-
-    updateAllTasks: async (userName, tasks) => {
-        const response = await fetch(`${baseUrlTodos}${userName}`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "accept": "application/json",
-            },
-            body: JSON.stringify(tasks),
-        });
     
-        if (!response.ok) throw new Error("Error actualizando tareas");
-        return await response.json();
-    },
-    
-    deleteTask: async (userName, taskId) => {
+    deleteTask: async (taskId) => {
         try {
             const request = await fetch(`${baseUrlTodos}${taskId}`, {
                 method: "DELETE",
@@ -124,22 +115,5 @@ export const todoListService = {
         } catch (error) {
             console.log(error);
         }
-    },
-
-    clearAllTasks: async (userName) => {
-        try {
-            const request = await fetch(`${baseUrlTodos}${userName}`, {
-                method: "DELETE",
-                headers: {
-                    'accept': 'application/json',
-                    "Content-Type": "application/json"
-                },
-            });
-
-            if (!request.ok) throw new Error("Error eliminando todas las tareas");
-            return true;
-        } catch (error) {
-            console.log(error);
-        }
-    },
+    }
 }

@@ -6,26 +6,28 @@ const TodoList = () => {
     const [newTask, setNewTask] = useState("");
     const [userInput, setUserInput] = useState("");
     const [formSubmitted, setFormSubmitted] = useState(false);
+    const [editTask, setEditTask] = useState(null);
+
 
     useEffect(() => {
-        if(formSubmitted){
-            fetchTasks();
+        if (formSubmitted) {
+            getTasks();
         }
     }, [formSubmitted])
 
-    const fetchTasks = async () => {
-        try{
+    const getTasks = async () => {
+        try {
             const data = await todoListService.getTasks(userInput);
             setTasks(data);
-        }catch(error){
+        } catch (error) {
             console.error(error);
         }
     }
 
     const handleDeleteTask = async (taskId) => {
         try {
-            await todoListService.deleteTask(userInput, taskId);
-            setTasks(tasks.filter(task => task.id !== taskId)); // Actualización selectiva
+            await todoListService.deleteTask(taskId);
+            setTasks(tasks.filter(task => task.id !== taskId));
         } catch (error) {
             console.error(error);
         }
@@ -34,13 +36,12 @@ const TodoList = () => {
     const handleCreateTask = async () => {
         try {
             const createdTask = await todoListService.createTask(userInput, newTask);
-            setTasks([...tasks, newTask]);
+            setTasks([...tasks, createdTask]);
             setNewTask("");
         } catch (error) {
             console.log(error);
         }
     };
-
 
     const handleCreateUser = async () => {
         try {
@@ -49,17 +50,22 @@ const TodoList = () => {
         } catch (error) {
             console.log(error);
             setFormSubmitted(true);
+            getTasks();
         }
     };
 
     const handleClearAll = async () => {
         try {
-            await todoListService.clearAllTasks(userInput);
+            await Promise.all(
+                tasks.map(task => todoListService.deleteTask(task.id))
+            );
             setTasks([]);
         } catch (error) {
-            console.error(error);
+            console.error("Error eliminando todas las tareas:", error);
         }
     };
+
+
 
     return (
         <div>
@@ -81,12 +87,19 @@ const TodoList = () => {
                     <div>
                         <input
                             type="text"
-                            placeholder="Nueva tarea"
+                            placeholder="Escribe la tarea"
                             value={newTask}
                             onChange={(e) => setNewTask(e.target.value)}
                         />
-                        <button onClick={handleCreateTask}>Agregar Tarea</button>
-                        <button onClick={handleClearAll}>Limpiar todas las tareas</button>
+                        {editTask ? (
+                            <button className="btn btn-warning" onClick={handleEditTask}>
+                                Editar Tarea
+                            </button>
+                        ) : (
+                            <button className="btn btn-primary" onClick={handleCreateTask}>
+                                Agregar Tarea
+                            </button>
+                        )}
                     </div>
                     <ul>
                         {tasks.map((task, index) => (
