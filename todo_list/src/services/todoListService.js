@@ -81,7 +81,7 @@ export const todoListService = {
         }
     },
 
-    updateTask: async (userName, taskId, updatedTask) => {
+    updateTask: async (taskId, updatedTask) => {
         try {
             const request = await fetch(`${baseUrlTodos}${taskId}`, {
                 method: "PUT",

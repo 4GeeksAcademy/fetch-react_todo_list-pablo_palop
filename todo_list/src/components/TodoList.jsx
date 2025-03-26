@@ -66,6 +66,28 @@ const TodoList = () => {
     };
 
 
+    const handleEditTask = async () => {
+        try {
+            const updatedTask = {
+                label: newTask,
+                is_done: false
+            };
+            await todoListService.updateTask(editTask, updatedTask);
+            const updatedTasks = tasks.map(task =>
+                task.id === editTask ? { ...task, label: newTask } : task
+            );
+            setTasks(updatedTasks);
+            setEditTask(null);
+            setNewTask("");
+        } catch (error) {
+            console.error("Error editando tarea:", error);
+        }
+    };
+
+    const handleEditClick = (task) => {
+        setNewTask(task.label);
+        setEditTask(task.id);
+    };
 
     return (
         <div>
@@ -105,6 +127,9 @@ const TodoList = () => {
                         {tasks.map((task, index) => (
                             <li key={index}>
                                 {task.label}
+                                <button className="btn btn-outline-secondary btn-sm me-2" onClick={() => handleEditClick(task)}>
+                                    Editar
+                                </button>
                                 <button onClick={() => handleDeleteTask(task.id)}>Eliminar</button>
                             </li>
                         ))}
